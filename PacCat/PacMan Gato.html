@@ -1,0 +1,203 @@
+<html>
+<head>
+    <title>PacMan Gato</title>
+    <style type="text/css">
+        *{
+            margin: 0;
+            padding: 0;
+        }
+        .fila{
+            line-height: 0;
+        }
+        .pared {
+            background-color: purple; 
+            height: 40px;
+            width: 40px;
+            display: inline-block;
+        }
+        .burguer {
+            background-color: black; 
+            height: 40px;
+            width: 40px;
+            display: inline-block;
+            background-image: url('img/burguer.png');
+            background-size: contain;
+        }
+        .blank {
+            background-color: black; 
+            height: 40px;
+            width: 40px;
+            display: inline-block;
+        }
+        /*Se crea la casilla papitas*/
+        .papitas { 
+            background-color: black;
+            height: 40px;
+            width: 40px;
+            display: inline-block;
+            background-image: url('img/papitas.png');
+            background-size: contain;
+        }
+        #gato, #perro {
+            background-color: black; 
+            height: 40px;
+            width: 40px;
+            display: inline-block;
+            position: absolute;
+        }
+        #gato {
+            background-image: url('img/gato.gif');
+            background-size: contain;
+        }
+        #perro {
+            background-image: url('img/perro.gif');
+            background-size: contain;
+        }
+        /*Se crea estilo para el puntaje*/
+        #puntaje {
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            font-size: 24px;
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+        /* Se añade estilo para las vidas */
+        #vidas {
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            font-size: 24px;
+            position: fixed;
+            top: 50px;
+            left: 10px;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Se agrega el div para el puntaje y las vidas -->
+    <div id="puntaje">Puntaje: 0</div>
+    <div id="vidas">Vidas: 3</div>
+    <div id ='mundo'></div>
+    <div id='gato'></div>
+    <div id='perro'></div>
+    <script type="text/javascript">
+        var filas = 25;
+        var columnas = 25;
+        var vidas = 3;
+        var puntaje = 0;
+        
+            //Funciíón que crea una matriz y la rellena con datos del 0 al 3 con probabilidad pre establecida.
+        function generarMundoAleatorio() { 
+            var nuevoMundo = [];
+            for (var y = 0; y < filas; y++) {
+                var fila = [];
+                for (var x = 0; x < columnas; x++) {
+                    if (y === 0 || y === filas - 1 || x === 0 || x === columnas - 1) {
+                        fila.push(1);
+                    } else if (y === 1 && x === 1) {
+                        fila.push(0);
+                    } else {
+                        let rand = Math.random();
+                        if (rand < 0.15) {
+                            fila.push(1);
+                        } else if (rand < 0.25) {
+                            fila.push(3);
+                        } else if (rand < 0.45) {
+                            fila.push(2);
+                        } else {
+                            fila.push(0);
+                        }
+                    }
+                }
+                nuevoMundo.push(fila);
+            }
+            return nuevoMundo;
+        }
+        
+        var mundo = generarMundoAleatorio(); 
+        
+        var diccionarioMundo = {
+            0: 'blank',
+            1: 'pared',
+            2: 'burguer',
+            3: 'papitas'
+        };
+        
+        function dibujarMundo(){
+            var output = "";
+            for(var fila = 0; fila < mundo.length; fila++){
+                output += "<div class='fila'>";
+                for(var x = 0; x < mundo[fila].length; x++){
+                    output += "<div class='"+diccionarioMundo[mundo[fila][x]]+"'></div>";
+                }
+                output += "</div>";
+            }
+            document.getElementById('mundo').innerHTML = output;
+        }
+        
+        dibujarMundo();
+
+        var gato = { x: 1, y: 1 }; //Posición.
+        var perro = { x: 8, y: 8 };
+        
+        function dibujarPersonaje(personaje, id) { //Se define el estilo de los personajes perro y gato.
+            document.getElementById(id).style.top = personaje.y * 40 + 'px';
+            document.getElementById(id).style.left = personaje.x * 40 + 'px';
+        }
+
+        dibujarPersonaje(gato, 'gato');
+        dibujarPersonaje(perro, 'perro');
+
+        document.onkeydown = function(e) {
+            if (e.keyCode === 37 && mundo[gato.y][gato.x-1] !== 1) gato.x--;  //funcion para controlar al gato
+            if (e.keyCode === 38 && mundo[gato.y-1][gato.x] !== 1) gato.y--;
+            if (e.keyCode === 39 && mundo[gato.y][gato.x+1] !== 1) gato.x++;
+            if (e.keyCode === 40 && mundo[gato.y+1][gato.x] !== 1) gato.y++;
+            
+            if (mundo[gato.y][gato.x] === 2) {
+                puntaje += 10;
+                mundo[gato.y][gato.x] = 0;
+            }
+            if (mundo[gato.y][gato.x] === 3) {
+                puntaje += 15;
+                mundo[gato.y][gato.x] = 0;
+            }
+            
+            actualizarPuntaje();
+            dibujarMundo();
+            dibujarPersonaje(gato, 'gato');
+        };
+        
+        function actualizarPuntaje() {
+            document.getElementById('puntaje').textContent = "Puntaje: " + puntaje;
+        }
+        function actualizarVidas() {
+            document.getElementById('vidas').textContent = "Vidas: " + vidas;
+        }
+
+        //Función que compara si es más conveniente moverse entre filas o columnas para empatar la posición del gato.
+        function moverPerro() {
+            if (perro.x < gato.x && mundo[perro.y][perro.x+1] !== 1) perro.x++;
+            else if (perro.x > gato.x && mundo[perro.y][perro.x-1] !== 1) perro.x--;
+            else if (perro.y < gato.y && mundo[perro.y+1][perro.x] !== 1) perro.y++;
+            else if (perro.y > gato.y && mundo[perro.y-1][perro.x] !== 1) perro.y--;
+            
+            dibujarPersonaje(perro, 'perro');
+            
+            if (perro.x === gato.x && perro.y === gato.y) { //Contador de vidas.
+                vidas--;
+                actualizarVidas();
+                if (vidas === 0) {
+                    alert("Game Over");
+                    location.reload();
+                }
+            }
+        }
+        setInterval(moverPerro, 500); 
+    </script>
+</body>
+</html>
