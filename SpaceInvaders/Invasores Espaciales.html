@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Invasores Espaciales</title>
+</head>
+<body>
+    <style type="text/css">
+        #espacio {
+            background-image: url("espacio3.jpg");
+            width: 900px;
+            height: 700px;
+            position: relative;
+        }
+        .nave {
+            position: absolute;
+            background-image: url("nave1.png");
+            width: 70px;
+            height: 80px;
+        }
+        .alien {
+            position: absolute;
+            background-image: url("alien.png");
+            width: 70px;
+            height: 75px;
+        }
+        .disparo {
+            position: absolute;
+            width: 8px;
+            height: 20px;
+            background-color: #FF00FF; /* Color rosa brillante para los disparos */
+            border-radius: 4px;
+            box-shadow: 0 0 10px #FF00FF; /* Efecto de brillo para los disparos */
+        }
+    </style>
+    <div id="espacio">
+        <div id="naves"></div>
+        <div id="aliens"></div>
+        <div id="disparos"></div>
+    </div>
+
+    <script type="text/javascript">
+        var nave = {
+            left: 450,
+            top: 620
+        };
+
+        var aliens = [
+        {left: 350, top: 200, speedX: 5, speedY: 0},  // Velocidad aumentada y dirección
+        {left: 450, top: 175, speedX: -5, speedY: 0}, // Dirección contraria
+        {left: 250, top: 220, speedX: 4, speedY: 0},  // Nuevo alien
+        {left: 550, top: 180, speedX: -4, speedY: 0}, // Nuevo alien
+        {left: 150, top: 240, speedX: 6, speedY: 0},  // Nuevo alien
+        {left: 650, top: 160, speedX: -6, speedY: 0}  // Nuevo alien
+        ];
+
+        function dibujaNave(){
+            contenido = "<div class='nave' style='left:"+nave.left+"px; top:"+nave.top+"px'></div>";
+            document.getElementById("naves").innerHTML = contenido;
+        }
+        
+        function dibujaAliens(){
+            contenido = "";
+            console.log(aliens);
+            for(var x = 0; x <aliens.length; x ++){
+                    contenido += "<div class='alien' style='left:"+aliens[x].left+"px; top:"+aliens[x].top+"px'></div>";
+            }
+            document.getElementById("aliens").innerHTML = contenido;
+        }
+        
+        // Función para mover los aliens y hacerlos rebotar en los bordes
+        function mueveAliens() {
+            var espacio = document.getElementById("espacio");
+            var limiteIzquierdo = 0;
+            var limiteDerecho = espacio.clientWidth - 70;
+            
+            for(var i = 0; i < aliens.length; i++) {
+                // Movimiento horizontal
+                aliens[i].left += aliens[i].speedX;
+                
+                // Rebote en bordes horizontales
+                if(aliens[i].left <= limiteIzquierdo || aliens[i].left >= limiteDerecho) {
+                    aliens[i].speedX *= -1; // Invertir dirección
+                    
+                    // Bajar un poco cuando rebota
+                    aliens[i].top += 20;
+                }
+            }
+        }
+        
+        // Función para dibujar los disparos en pantalla
+        function dibujaDisparos(){
+            contenido = "";
+            for(var i = 0; i < disparos.length; i++){
+                contenido += "<div class='disparo' style='left:"+disparos[i].left+"px; top:"+disparos[i].top+"px'></div>";
+            }
+            document.getElementById("disparos").innerHTML = contenido;
+        }
+
+        // Esta función mueve los disparos hacia arriba y elimina los que salen de la pantalla
+        function mueveDisparos(){
+            for(var i = 0; i < disparos.length; i++){
+                disparos[i].top -= 10; // Los disparos suben 10px en cada movimiento
+                
+                // Eliminar disparos que salen de la pantalla
+                if(disparos[i].top < 0){
+                    disparos.splice(i, 1);
+                    i--;
+                }
+            }
+        }
+
+        // Función para detectar colisiones entre disparos y aliens
+        function detectaColisiones(){
+            for(var i = 0; i < disparos.length; i++){
+                for(var j = 0; j < aliens.length; j++){
+                    // Verificamos si el disparo está dentro del área del alien
+                    if(
+                        disparos[i].left >= aliens[j].left && 
+                        disparos[i].left <= aliens[j].left + 70 &&
+                        disparos[i].top >= aliens[j].top && 
+                        disparos[i].top <= aliens[j].top + 75
+                    ){
+                        // Elimina el alien y el disparo al colisionar
+                        aliens.splice(j, 1);
+                        disparos.splice(i, 1);
+                        i--;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Esta función actualiza el estado del juego en cada frame
+        function actualizaJuego(){
+            mueveAliens();          // Movemos los aliens primero
+            mueveDisparos();        // Movemos los disparos
+            detectaColisiones();    // Comprobamos colisiones
+            dibujaAliens();         // Actualizamos la posición visual de los aliens
+            dibujaDisparos();       // Actualizamos la posición visual de los disparos
+            
+            // Continuar el ciclo del juego con requestAnimationFrame para animación fluida
+            requestAnimationFrame(actualizaJuego);
+        }
+
+        //Para los limites se utilizan funciones clientHEigh y clientWidth, las cuales obtienen el tamaño del fondo en tiempo real. 
+        document.onkeydown = function(e){
+            var espacio = document.getElementById("espacio");
+            var limiteSuperior = (2 / 3) * espacio.clientHeight; // Permite subir solo 1/3.
+            var limiteInferior = espacio.clientHeight - 80; // Límite inferior (restamos la altura de la nave).
+            var limiteIzquierdo = 0; // No puede ir más a la izquierda del contenedor.
+            var limiteDerecho = espacio.clientWidth - 70; // No puede ir más a la derecha del contenedor.
+
+            console.log(e);
+            if(e.keyCode === 37){ // Izquierda
+                if (nave.left - 10 >= limiteIzquierdo) {
+                    nave.left -= 10;
+                } else {
+                    nave.left = limiteIzquierdo;
+                }
+            }
+            if(e.keyCode === 39){ // Derecha
+                if (nave.left + 10 <= limiteDerecho) {
+                    nave.left += 10;
+                } else {
+                    nave.left = limiteDerecho;
+                }
+            }
+            if(e.keyCode === 38){ // Arriba
+                if (nave.top - 10 >= limiteSuperior) {
+                    nave.top -= 10;
+                } else {
+                    nave.top = limiteSuperior;
+                }
+            }
+            if(e.keyCode === 40){ // Abajo
+                if (nave.top + 10 <= limiteInferior) {
+                    nave.top += 10;
+                } else {
+                    nave.top = limiteInferior;
+                }
+            }
+            // Tecla espaciadora para disparar - añadimos nuevo control
+            if(e.keyCode === 32){ // Disparo con barra espaciadora
+                disparos.push({
+                    left: nave.left + 31, // Centrar el disparo en la nave
+                    top: nave.top - 20    // Posicionar el disparo encima de la nave
+                });
+                dibujaDisparos();
+            }
+
+            dibujaNave();
+        }
+
+        // Array para almacenar los disparos
+        var disparos = [];
+
+        // Inicialización del juego
+        dibujaNave();
+        dibujaAliens();
+        actualizaJuego(); // Iniciamos el ciclo de juego
+
+    </script>
+
+</body>
+</html>
